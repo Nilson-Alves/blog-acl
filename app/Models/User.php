@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 
+use App\Traits\HasRoles;
 use Hamcrest\Type\IsBoolean;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Casts\Attribute as CastsAttribute;
@@ -18,7 +19,7 @@ use function PHPUnit\Framework\isNull;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -51,40 +52,14 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function roles():BelongsToMany
-    {
-        return $this->belongsToMany(Role::class);
-    }
+
 
     public function password(): CastsAttributes
     {
-        return new CastsAttributes(function($value){
-           if(!empty($value) && !is_null($value)){
+        return new CastsAttributes(function ($value) {
+            if (!empty($value) && !is_null($value)) {
                 return bcrypt($value);
-           }
+            }
         });
-
     }
-
-    public function hasRole(string $role):bool
-    {
-        return $this->roles()->whereName($role)->exists();
-    }
-
-    public function hasRoles(array $nomes):bool
-    {
-        return $this->roles()->whereIn('name', $nomes)->exists();
-    }
-
-    public function hasPermission(string $permission):bool
-    {
-        return $this->roles->filter(fn($role)=>$role->permissions()->whereName($permission)->exists())
-        ->count() >0;
-    }
-
-
-
-
-
-
 }
